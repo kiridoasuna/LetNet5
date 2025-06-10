@@ -1,5 +1,3 @@
-# LetNet5
-LetNet-5' Code
 # 手动实现LeNet-5深度神经网络
 ### 下面是leNet-5的解释和介绍
 
