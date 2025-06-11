@@ -38,7 +38,7 @@ class LeNet(nn.Module):
         x = self.f6(x)
         x = self.relu(x)
         x = self.f7(x)
-        x = self.softmax(x)
+        # x = self.softmax(x)
         return x
 
 if __name__ == "__main__":
