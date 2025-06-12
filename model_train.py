@@ -15,9 +15,14 @@ from torchvision import transforms
 import torch.utils.data as Data
 import numpy as np
 import matplotlib.pyplot as plt
-from model import LeNet
+from model import LetNet
+import pandas as pd
 
 def train_val_data_process():
+    """
+    获取数据，并设定训练集和验证集
+    :return: 返回训练集和验证集
+    """
     train_data = FashionMNIST(root='./data',
                               train=True,
                               download=True,
@@ -37,6 +42,14 @@ def train_val_data_process():
     return train_data_loader, val_data_loader
 
 def train_model_process(model, train_data_loader, val_data_loader, num_epochs):
+    """
+    使用模型训练，并保存最佳的模型
+    :param model: 模型
+    :param train_data_loader: 训练集
+    :param val_data_loader: 验证集
+    :param num_epochs: 训练的轮次
+    :return: 训练集和验证集的loss和acc
+    """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # 使用adam 优化器，学习率为0.001
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -138,4 +151,68 @@ def train_model_process(model, train_data_loader, val_data_loader, num_epochs):
         print(f"{'-'*10} epoch : {epoch}/{num_epochs -1} {'-'*10}")
         print(f"train_loss: {train_loss_all[-1]}, train_acc: {train_acc_all[-1]}")
         print(f"val_loss: {val_loss_all[-1]}, val_acc: {val_acc_all[-1]}")
+
+        if val_acc_all[-1] > best_acc:
+            best_acc = val_acc_all[-1]
+            best_model_wts = copy.deepcopy(model.state_dict())
+
+        # 计算训练和验证的耗时
+        time_cost = time.time() - since
+        print(f"训练和验证耗费的时间{time_cost // 60:.0f}m {time_cost % 60:.0f}s ")
+    # 选择最优的参数， 保存最优参数的模型
+    torch.save(best_model_wts, f"./model/best_model.pth")
+
+    # 返回每一
+    train_process = pd.DataFrame(data={"epoch":range(num_epochs),
+                                       "train_loss_all":train_loss_all,
+                                       "val_loss_all":val_loss_all,
+                                       "train_acc_all":train_acc_all,
+                                       "val_acc_all":val_acc_all,})
+    return train_process
+
+def matplot_acc_loss(tran_process):
+    """
+    使用训练集和验证集的loss值和精确度 acc来生成变化曲线
+    :param tran_process:
+    :return:
+    """
+    # 设置中文字体和解决负号显示问题
+    plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei'] #linux安装的字体：文泉驿微米黑
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号 '-' 显示为方块的问题
+
+    # 图形的宽度为 12 英寸，高度为 4 英寸。
+    plt.figure(figsize=(12, 4))
+    # 第一个图
+    plt.subplot(1, 2, 1)
+    plt.plot(tran_process["epoch"], tran_process['train_loss_all'], "ro-",  label='train_loss')
+    plt.plot(tran_process["epoch"], tran_process['val_loss_all'], "bs-", label='val_loss')
+    plt.legend()
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.title("损失变化曲线")
+    plt.grid(True)
+
+    # 第二个图
+    plt.subplot(1, 2, 2)
+    plt.plot(tran_process["epoch"], tran_process['train_acc_all'], "ro-",  label='train_acc')
+    plt.plot(tran_process["epoch"], tran_process['val_acc_all'], "bs-", label='val_acc')
+    plt.legend()
+    plt.xlabel('epoch')
+    plt.ylabel('acc')
+    plt.title("精确度变化曲线")
+    plt.grid(True)
+
+    plt.show()
+
+if __name__ == '__main__':
+    # 实例化模型
+    LetNet = LetNet()
+    # 加载数据集
+    train_data, val_data = train_val_data_process()
+    # 训练
+    train_process = train_model_process(LetNet, train_data, val_data, 20)
+    # 生成变化曲线图
+    matplot_acc_loss(train_process)
+
+
 

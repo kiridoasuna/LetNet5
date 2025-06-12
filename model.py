@@ -2,13 +2,13 @@ import torch
 from torch import nn
 from torchsummary import summary
 
-class LeNet(nn.Module):
+class LetNet(nn.Module):
 
     def __init__(self):
         """
         模型每一层的设定
         """
-        super(LeNet, self).__init__()
+        super(LetNet, self).__init__()
         self.c1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, padding=2)
         self.relu = nn.ReLU()
         self.s2 = nn.AvgPool2d(kernel_size=2, stride=2)
@@ -43,5 +43,5 @@ class LeNet(nn.Module):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = LeNet().to(device)
+    model = LetNet().to(device)
     print(summary(model, (1, 28, 28)))
