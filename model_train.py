@@ -79,7 +79,7 @@ def train_model_process(model, train_data_loader, val_data_loader, num_epochs):
         train_num = 0
         # 验证集样本数量
         val_num = 0
-
+        # 训练每个 batch
         for step, (b_x, b_y) in enumerate(train_data_loader):
             # 将数据-特征传入到设备中
             b_x = b_x.to(device)
@@ -107,5 +107,35 @@ def train_model_process(model, train_data_loader, val_data_loader, num_epochs):
             # 当前用于训练的样本数量
             train_num += b_x.size(0)
 
+        # 验证每个 batch
+        for step, (val_x, val_y) in enumerate(val_data_loader):
+            # 把验证数据的特征和标签加入到系统中
+            val_x = val_x.to(device)
+            val_y = val_y.to(device)
+            # 使用模型推理
+            model.eval()
+            # 使用验证数据推理的结果（正向传播）
+            output_val = model(val_x)
+            # 查找每一个行中最大值对应的行标
+            pre_lab_val = torch.argmax(output_val, dim=1)
+            # 计算loss值
+            loss = criterion(output_val, val_y)
+            # 对验证集的损失函数进行累加
+            val_loss += loss.item() * val_x.size(0)
+            # 如果预测正确，则准确度train_corrects加1
+            val_corrects += torch.sum(pre_lab_val == val_y.data)
+            # 当前用于训练的样本数量
+            val_num += val_x.size(0)
 
+        # 计算并保存每一轮的训练和验证集的Loss值和准确率
+        # 训练集
+        train_loss_all.append(train_loss / train_num)
+        train_acc_all.append(train_corrects.double().item() / train_num)
+        # 验证集
+        val_loss_all.append(val_loss / val_num)
+        val_acc_all.append(val_corrects.double().item() / val_num)
+
+        print(f"{'-'*10} epoch : {epoch}/{num_epochs -1} {'-'*10}")
+        print(f"train_loss: {train_loss_all[-1]}, train_acc: {train_acc_all[-1]}")
+        print(f"val_loss: {val_loss_all[-1]}, val_acc: {val_acc_all[-1]}")
 
