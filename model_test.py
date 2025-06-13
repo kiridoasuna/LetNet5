@@ -7,14 +7,14 @@
 '''
 
 import torch
-from torch.utils.data import DataLoader
+import torch.utils.data as Data
 from torchvision.datasets import FashionMNIST
 from torchvision import transforms
 from model import LetNet
 
 def test_data_loader_process():
     test_data = FashionMNIST(root='./data', train=False, transform=transforms.Compose([transforms.ToTensor()]))
-    test_data_loader = DataLoader(test_data, batch_size=1, shuffle=True, num_workers=8)
+    test_data_loader = Data.DataLoader(test_data, batch_size=1, shuffle=True, num_workers=8)
 
     return test_data_loader
 
