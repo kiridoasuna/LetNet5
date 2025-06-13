@@ -160,7 +160,7 @@ def train_model_process(model, train_data_loader, val_data_loader, num_epochs):
         time_cost = time.time() - since
         print(f"训练和验证耗费的时间{time_cost // 60:.0f}m {time_cost % 60:.0f}s ")
     # 选择最优的参数， 保存最优参数的模型
-    torch.save(best_model_wts, f"./model/best_model.pth")
+    torch.save(best_model_wts, "./model/best_model.pth")
 
     # 返回每一
     train_process = pd.DataFrame(data={"epoch":range(num_epochs),
