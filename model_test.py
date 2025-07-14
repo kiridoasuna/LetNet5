@@ -14,7 +14,7 @@ from model import LetNet
 
 def test_data_loader_process():
     test_data = FashionMNIST(root='./data', train=False, transform=transforms.Compose([transforms.ToTensor()]))
-    test_data_loader = Data.DataLoader(test_data, batch_size=1, shuffle=True, num_workers=8)
+    test_data_loader = Data.DataLoader(test_data, batch_size=1, shuffle=False, num_workers=0)
 
     return test_data_loader
 
@@ -23,7 +23,7 @@ def test_model_process(model, test_data_loader):
 
     model.to(device)
 
-    test_correct = 0
+    test_correct = 0.0
     total_test_num = len(test_data_loader.dataset)
 
     with torch.no_grad():
@@ -39,7 +39,7 @@ def test_model_process(model, test_data_loader):
             pre_lab = torch.argmax(output, dim=1)
             test_correct += torch.sum(pre_lab == test_data_y).item()
 
-        test_acc = test_correct.double() / total_test_num
+        test_acc = test_correct / total_test_num
 
         print(f"Test Accuracy: {test_acc}")
 

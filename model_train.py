@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 '''
 @Project ：learn_dl_leNet_5 
-@File    ：model_train.py.py
+@File    ：model_train.py
 @Author  ：公众号：思维侣行
 @Date    ：2025/6/10 12:09 
 '''
@@ -10,11 +10,15 @@ import time
 
 import torch
 from torch import nn
+from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import FashionMNIST
 from torchvision import transforms
-import torch.utils.data as Data
+# from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib.font_manager import FontProperties
+
 from model import LetNet
 import pandas as pd
 
@@ -27,17 +31,17 @@ def train_val_data_process():
                               train=True,
                               download=True,
                               transform=transforms.Compose([transforms.Resize(size=28), transforms.ToTensor()]))
-    train_data, val_data = Data.random_split(train_data, [round(0.8 * len(train_data)), round(0.2 * len(train_data))])
+    train_data, val_data = random_split(train_data, [round(0.8 * len(train_data)), round(0.2 * len(train_data))])
 
-    train_data_loader = Data.DataLoader(dataset=train_data,
-                                        batch_size=128,
+    train_data_loader = DataLoader(dataset=train_data,
+                                        batch_size=64,
                                         shuffle=True,
-                                        num_workers=8)
+                                        num_workers=2)
 
-    val_data_loader = Data.DataLoader(dataset=val_data,
-                                        batch_size=128,
-                                        shuffle=True,
-                                        num_workers=8)
+    val_data_loader = DataLoader(dataset=val_data,
+                                        batch_size=64,
+                                        shuffle=False,
+                                        num_workers=2)
 
     return train_data_loader, val_data_loader
 
@@ -121,24 +125,25 @@ def train_model_process(model, train_data_loader, val_data_loader, num_epochs):
             train_num += b_x.size(0)
 
         # 验证每个 batch
-        for step, (val_x, val_y) in enumerate(val_data_loader):
-            # 把验证数据的特征和标签加入到系统中
-            val_x = val_x.to(device)
-            val_y = val_y.to(device)
-            # 使用模型推理
-            model.eval()
-            # 使用验证数据推理的结果（正向传播）
-            output_val = model(val_x)
-            # 查找每一个行中最大值对应的行标
-            pre_lab_val = torch.argmax(output_val, dim=1)
-            # 计算loss值
-            loss = criterion(output_val, val_y)
-            # 对验证集的损失函数进行累加
-            val_loss += loss.item() * val_x.size(0)
-            # 如果预测正确，则准确度train_corrects加1
-            val_corrects += torch.sum(pre_lab_val == val_y.data)
-            # 当前用于训练的样本数量
-            val_num += val_x.size(0)
+        with torch.no_grad():  # 关闭梯度计算
+            for step, (val_x, val_y) in enumerate(val_data_loader):
+                # 把验证数据的特征和标签加入到系统中
+                val_x = val_x.to(device)
+                val_y = val_y.to(device)
+                # 使用模型推理
+                model.eval()
+                # 使用验证数据推理的结果（正向传播）
+                output_val = model(val_x)
+                # 查找每一个行中最大值对应的行标
+                pre_lab_val = torch.argmax(output_val, dim=1)
+                # 计算loss值
+                loss = criterion(output_val, val_y)
+                # 对验证集的损失函数进行累加
+                val_loss += loss.item() * val_x.size(0)
+                # 如果预测正确，则准确度train_corrects加1
+                val_corrects += torch.sum(pre_lab_val == val_y.data)
+                # 当前用于训练的样本数量
+                val_num += val_x.size(0)
 
         # 计算并保存每一轮的训练和验证集的Loss值和准确率
         # 训练集
@@ -159,6 +164,7 @@ def train_model_process(model, train_data_loader, val_data_loader, num_epochs):
         # 计算训练和验证的耗时
         time_cost = time.time() - since
         print(f"训练和验证耗费的时间{time_cost // 60:.0f}m {time_cost % 60:.0f}s ")
+
     # 选择最优的参数， 保存最优参数的模型
     torch.save(best_model_wts, "./model/best_model.pth")
 
@@ -177,9 +183,13 @@ def matplot_acc_loss(tran_process):
     :return:
     """
     # 设置中文字体和解决负号显示问题
-    plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei'] #linux安装的字体：文泉驿微米黑
+    # plt.rcParams["font.sans-serif"] = ["WenQuanYi Micro Hei Mono"]#linux安装的字体：文泉驿微米黑
     plt.rcParams['axes.unicode_minus'] = False  # 解决负号 '-' 显示为方块的问题
-
+    font_path = "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"  # 根据实际路径修改
+    font = FontProperties(fname=font_path)
+    # print(matplotlib.matplotlib_fname())  # 打印配置文件路径
+    # print(matplotlib.rcParams["font.family"])  # 查看当前字体设置
+    # print(matplotlib.rcParams["font.sans-serif"])  # 查看当前字体设置
     # 图形的宽度为 12 英寸，高度为 4 英寸。
     plt.figure(figsize=(12, 4))
     # 第一个图
@@ -189,7 +199,7 @@ def matplot_acc_loss(tran_process):
     plt.legend()
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.title("损失变化曲线")
+    plt.title("损失变化曲线", fontproperties=font)
     plt.grid(True)
 
     # 第二个图
@@ -199,7 +209,7 @@ def matplot_acc_loss(tran_process):
     plt.legend()
     plt.xlabel('epoch')
     plt.ylabel('acc')
-    plt.title("精确度变化曲线")
+    plt.title("精确度变化曲线", fontproperties=font)
     plt.grid(True)
 
     plt.show()

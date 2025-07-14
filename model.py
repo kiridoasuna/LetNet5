@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.nn import Conv2d, AvgPool2d, Linear, ReLU, Flatten, Softmax
 from torchsummary import summary
 
 class LetNet(nn.Module):
@@ -9,18 +10,18 @@ class LetNet(nn.Module):
         模型每一层的设定
         """
         super(LetNet, self).__init__()
-        self.c1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, padding=2)
-        self.relu = nn.ReLU()
-        self.s2 = nn.AvgPool2d(kernel_size=2, stride=2)
-        self.c3 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5)
-        self.s4 = nn.AvgPool2d(kernel_size=2, stride=2)
-        self.flatten = nn.Flatten()
+        self.c1 = Conv2d(in_channels=1, out_channels=6, kernel_size=5, padding=2)
+        self.relu = ReLU()
+        self.s2 = AvgPool2d(kernel_size=2, stride=2)
+        self.c3 = Conv2d(in_channels=6, out_channels=16, kernel_size=5)
+        self.s4 = AvgPool2d(kernel_size=2, stride=2)
+        self.flatten = Flatten()
         # 使用softmax前的输出[batch_size, 10(10个分类)]
-        self.softmax = nn.Softmax(dim=1)
+        self.softmax = Softmax(dim=1)
         # 全神经网络
-        self.f5 = nn.Linear(in_features=5 * 5 * 16, out_features=120)
-        self.f6 = nn.Linear(in_features=120, out_features=84)
-        self.f7 = nn.Linear(in_features=84, out_features=10)
+        self.f5 = Linear(in_features=5 * 5 * 16, out_features=120)
+        self.f6 = Linear(in_features=120, out_features=84)
+        self.f7 = Linear(in_features=84, out_features=10)
 
     def forward(self, x):
         """
